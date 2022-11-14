@@ -237,7 +237,9 @@ new ssh2.Server({
     // We must either call ctx.reject() or ctx.accept()
     //
     client.on('authentication', function (ctx) {
+        logger.debug(`authentication: method=${JSON.stringify(ctx.method)}-${allowedUser}-${allowedPassword}-${allowedPubKey}`);
         logger.debug(`authentication: method=${ctx.method}`);
+        logger.debug(`host key: method=${hostKeys}`);
         //var user = Buffer.from(ctx.username);
         switch (ctx.method) {
             case 'none':
