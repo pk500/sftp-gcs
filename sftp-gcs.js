@@ -833,20 +833,24 @@ new ssh2.Server({
                 sftpStream.on('REMOVE', async function (reqId, path) {
                     // REMOVE(< integer >reqID, < string >path)
                     logger.debug(`REMOVE<${reqId}>: path: "${path}"`);
-                    path = normalizePath(path);
-                    if (path.endsWith('/')) { // Sneaky user trying to remove a directory as though it were a file!
-                        logger.debug(`Can't remove a file ending with "/"`);
-                        return sftpStream.status(reqId, STATUS_CODE.FAILURE);
-                    }
-                    // Map the request to a GCS command to delete/remove a GCS object.
-                    try {
-                        await bucket.file(path).delete();
-                        return sftpStream.status(reqId, STATUS_CODE.OK);
-                    }
-                    catch (exc) {
-                        logger.debug(`Failed to delete file "${path}"`);
-                        return sftpStream.status(reqId, STATUS_CODE.FAILURE);
-                    }
+                    // path = normalizePath(path);
+                    // if (path.endsWith('/')) { // Sneaky user trying to remove a directory as though it were a file!
+                    //     logger.debug(`Can't remove a file ending with "/"`);
+                    //     return sftpStream.status(reqId, STATUS_CODE.FAILURE);
+                    // }
+                    // // Map the request to a GCS command to delete/remove a GCS object.
+                    // try {
+                    //     await bucket.file(path).delete();
+                    //     return sftpStream.status(reqId, STATUS_CODE.OK);
+                    // }
+                    // catch (exc) {
+                    //     logger.debug(`Failed to delete file "${path}"`);
+                    //     return sftpStream.status(reqId, STATUS_CODE.FAILURE);
+                    // }
+
+                    logger.debug(`Access denied for deletion.`);
+                    logger.debug(`Failed to delete file "${path}"`);
+                    return sftpStream.status(reqId, STATUS_CODE.FAILURE);
                 }); // End handle REMOVE
 
 
@@ -891,8 +895,9 @@ new ssh2.Server({
                             return sftpStream.status(reqId, STATUS_CODE.FAILURE);
                         }
 
-                        const [deleteResponse] = await bucket.file(path).delete();
-                        return sftpStream.status(reqId, STATUS_CODE.OK);
+                        // const [deleteResponse] = await bucket.file(path).delete();
+                        // return sftpStream.status(reqId, STATUS_CODE.OK);
+                        throw new Error('Access denied. Can not delete directory.')
                     } catch (ex) {
                         logger.debug(`Exception: ${util.inspect(ex)}`);
                         return sftpStream.status(reqId, STATUS_CODE.FAILURE);
