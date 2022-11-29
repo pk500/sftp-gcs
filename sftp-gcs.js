@@ -833,6 +833,7 @@ new ssh2.Server({
                 sftpStream.on('REMOVE', async function (reqId, path) {
                     // REMOVE(< integer >reqID, < string >path)
                     logger.debug(`REMOVE<${reqId}>: path: "${path}"`);
+
                     path = normalizePath(path);
                     if (path.endsWith('/')) { // Sneaky user trying to remove a directory as though it were a file!
                         logger.debug(`Can't remove a file ending with "/"`);
@@ -840,13 +841,19 @@ new ssh2.Server({
                     }
                     // Map the request to a GCS command to delete/remove a GCS object.
                     try {
+
+                        throw new Error('Access denied. Can not delete directory.')
+
                         await bucket.file(path).delete();
                         return sftpStream.status(reqId, STATUS_CODE.OK);
+                        
                     }
                     catch (exc) {
+                        logger.debug(`Access denied.`);
                         logger.debug(`Failed to delete file "${path}"`);
                         return sftpStream.status(reqId, STATUS_CODE.FAILURE);
                     }
+
                 }); // End handle REMOVE
 
 
@@ -875,6 +882,9 @@ new ssh2.Server({
                     }
 
                     try {
+
+                        throw new Error('Access denied. Can not delete directory.')
+
                         // Let us see if we have files that end in path:
                         const [fileList] = await bucket.getFiles({
                             "autoPaginate": false,
@@ -890,9 +900,9 @@ new ssh2.Server({
                             logger.debug(`Directory not empty: "${path}"`);
                             return sftpStream.status(reqId, STATUS_CODE.FAILURE);
                         }
-
                         const [deleteResponse] = await bucket.file(path).delete();
                         return sftpStream.status(reqId, STATUS_CODE.OK);
+
                     } catch (ex) {
                         logger.debug(`Exception: ${util.inspect(ex)}`);
                         return sftpStream.status(reqId, STATUS_CODE.FAILURE);
